@@ -7,14 +7,13 @@
 
 import { log } from "console";
 import { Request, Response } from "express";
-import { Usuario, getByEmail, insert } from "../models/usuario";
+import { Usuario, getByEmail, getByEmailAndSenha, insert } from "../models/usuario";
 
 //Parte: carregar páginas
 
-export function show_login(req:Request,  res:Response){
-    res.render('login', {response: null});
+export function show_login(req: Request, res: Response) {
+    res.render('login', { response: null });
 }
-
 
 //Parte: CRUD
 
@@ -23,26 +22,26 @@ export function show_login(req:Request,  res:Response){
 //validar  se ja existe um usuario xom o mesmo email
 //caso tudo esteja valido, enviar os dados do user para a  model
 //mostrar a pagina de login com as informaçoes de sucesso ou erro
-export async function register(req: Request, res: Response){
+export async function register(req: Request, res: Response) {
     const { nome, email, senha } = req.body;
 
-if(!nome || !email || !senha) {
-    return res.render('login', {
-        response: {
-            type: 'error',
-            value: 'Preencha os campos corretamente'
-        }
-    })
-}
+    if (!nome || !email || !senha) {
+        return res.render('login', {
+            response: {
+                type: 'error',
+                value: 'Preencha os campos corretamente'
+            }
+        })
+    }
 
     const userFound = await getByEmail(email)
 
-    if(userFound) {
+    if (userFound) {
         return res.render('login', {
             response: {
                 type: 'error',
                 value: 'email já cadastrado'
-    }
+            }
         });
     }
 
@@ -52,14 +51,43 @@ if(!nome || !email || !senha) {
         senha
     }
 
-await insert(usuario);
-return res.render('login', {
-    response: {
-        type: 'errsuccessor',
-        value: 'usuario cadastrado com sucesso'
-}
-});
+    await insert(usuario);
+    return res.render('login', {
+        response: {
+            type: 'errsuccessor',
+            value: 'usuario cadastrado com sucesso'
+        }
+    });
 
     res.render('login');
 }
 
+export async function login(req: Request, res: Response) {
+    const { email, senha } = req.body;
+
+
+    if (!email || !senha) {
+        return res.render('login', {
+            response: {
+                type: 'error',
+                value: 'Preencha os campos corretamente'
+            }
+        });
+    }
+
+    const usuario = await getByEmailAndSenha(email, senha);
+
+    if (!usuario) {
+        return res.render('login', {
+            response: {
+                type: 'error',
+                value: 'Email ou Senha incorretos'
+            }
+        });
+    }
+
+    res.render('dashboard', {
+        nome: usuario.nome
+    });
+
+}
